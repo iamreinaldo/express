@@ -3,10 +3,11 @@ import {autor} from "../models/index.js";
 
 class AutorController {
     
-  static async listarAutores (req, res, next) {
+  static listarAutores (req, res, next) {
     try{
-      const listaAutores = await autor.find({});
-      res.status(200).json(listaAutores);
+      const autoresResultado =  autor.find({});
+      req.resultado = autoresResultado;
+      next();
     } catch (erro){
       next(erro);
     }

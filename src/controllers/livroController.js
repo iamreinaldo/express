@@ -2,11 +2,17 @@ import { autor, livro } from "../models/index.js";
 import NaoEncontrado from "../erros/NaoEncontrado.js";
 
 class LivroController {
+
+  
     
   static async listarLivros (req, res, next) {
     try{  
-      const listaLivros = await livro.find({});
-      res.status(200).json(listaLivros);
+      const buscaLivros = livro.find();
+
+      req.resultado = buscaLivros;
+
+      next();
+
     } catch (erro){
       next(erro);
     }
@@ -72,11 +78,18 @@ class LivroController {
     try{
       const busca = await processaBusca(req.query);
 
-      const livrosPorEditora = await livro
-        .find(busca)
-        .populate("autor");
+      if(busca!==null){
+        const livrosResultado = livro
+          .find(busca)
+          .populate("autor");
 
-      res.status(200).json(livrosPorEditora);
+        req.resultado = livrosResultado;
+          
+        res.status(200).json(livrosResultado);
+      } else {
+        res.status(200).send([]);
+      }
+
     } catch(erro){
       next(erro);
     }
@@ -88,7 +101,7 @@ async function  processaBusca(parametros){
 
   const regex = new RegExp(titulo, "i");
 
-  const busca = {};
+  let busca = {};
 
   if(editora) busca.editora = regex;
   if(titulo) busca.titulo = { $regex: titulo, $options: "i" };
@@ -103,9 +116,11 @@ async function  processaBusca(parametros){
   if(nomeAutor){
     const autor = await autor.findOne({nome: nomeAutor});
 
-    const autorID = autor._id;
-
-    busca.autor = autorID;
+    if (autor !== null) {      
+      busca.autor = autor._id;
+    } else {
+      busca = null;
+    }
 
   }
 
